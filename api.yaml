@@ -8,7 +8,7 @@ paths:
     get:
       summary: 株式データ取得
       operationId: AP01_get_stock
-      description: 株式データを取得する。
+      description: 株式データを取得
       parameters:
         - name: symbol
           in: query
@@ -39,7 +39,7 @@ paths:
     post:
       summary: 株式データ登録
       operationId: AP01_post_stock
-      description: 株式データを登録する。
+      description: 株式データを登録
       responses:
         "200":
           description: 正常終了
