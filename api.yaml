@@ -1,0 +1,129 @@
+openapi: 3.0.0
+info:
+  title: OpenAPI Tutorial
+  description: OpenAPI Tutorial by halhorn
+  version: 0.0.0
+paths:
+  /stock:
+    get:
+      summary: 株式データ取得
+      operationId: AP01_get_stock
+      description: 株式データを取得する。
+      parameters:
+        - name: symbol
+          in: query
+          description: symbol
+          required: false
+          schema:
+           type: string
+      responses:
+        "200":
+          description: ※正常終了の場合
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  symbol:
+                   type: string
+                  price:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/StockPrice"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+        "503":
+          $ref: "#/components/responses/InMaintenance"
+    post:
+      summary: 株式データ登録
+      operationId: AP01_post_stock
+      description: 株式データを登録する。
+      responses:
+        "200":
+          description: 正常終了
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  symbol:
+                   type: string
+                  price:
+                    type: array
+                    items:
+                     $ref: "#/components/schemas/StockPrice"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+        "503":
+          $ref: "#/components/responses/InMaintenance"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                symbol:
+                  type: string
+                  description: 登録したい銘柄
+              required:
+                - symbol
+components:
+  responses:
+    Unauthorized:
+      description: 認証エラー
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    InternalServerError:
+      description: Internal Server Error
+    InMaintenance:
+      description: メンテナンス中
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                enum: [101]
+              data:
+                $ref: "#/components/schemas/Error"
+  schemas:
+    StockPrice:
+      type: object
+      description: 株価情報
+      required:
+        - date
+        - open
+        - high
+        - low
+        - close
+      properties:
+        date:
+          type: string
+          format: date-time
+          description: 取得時間
+        open:
+          type: string
+          description: 始値
+        high:
+          type: string
+          description: 高値
+        low:
+          type: string
+          description: 安値
+        close:
+          type: string
+          description: 終値
+    Error:
+      type: object
+      description: エラー時のレスポンス
+      properties:
+        message:
+          type: string
+          description: エラーメッセージ

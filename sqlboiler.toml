@@ -1,0 +1,13 @@
+pkgname = "dao"
+output = "dao"
+wipe = true
+no-tests = true
+
+[mysql]
+dbname = "go_stock_analysis"
+host = "db"
+port = 3306
+user = "root"
+pass = "password"
+sslmode = "false"
+blacklist = []
