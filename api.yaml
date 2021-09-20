@@ -69,8 +69,13 @@ paths:
                 symbol:
                   type: string
                   description: 登録したい銘柄
+                interval:
+                  type: string
+                  description: 時間間隔
+                  enum: [1min, 5min, 15min, 30min, 60min]
               required:
                 - symbol
+                - interval
 components:
   responses:
     Unauthorized:

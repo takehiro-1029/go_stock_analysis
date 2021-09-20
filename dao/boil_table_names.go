@@ -4,7 +4,11 @@
 package dao
 
 var TableNames = struct {
-	StockPrice string
+	Intervals string
+	Price     string
+	Stocks    string
 }{
-	StockPrice: "stock_price",
+	Intervals: "intervals",
+	Price:     "price",
+	Stocks:    "stocks",
 }

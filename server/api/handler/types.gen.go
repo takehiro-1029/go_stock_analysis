@@ -54,6 +54,9 @@ type AP01GetStockParams struct {
 // AP01PostStockJSONBody defines parameters for AP01PostStock.
 type AP01PostStockJSONBody struct {
 
+	// 時間間隔
+	Interval string `json:"interval"`
+
 	// 登録したい銘柄
 	Symbol string `json:"symbol"`
 }

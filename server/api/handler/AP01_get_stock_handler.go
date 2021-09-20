@@ -21,9 +21,9 @@ func HandleGetStockRequest(w http.ResponseWriter, r *http.Request, params AP01Ge
 
 	ctx := r.Context()
 
-	price, err := dao.StockPrices(
-		dao.StockPriceWhere.SymbolID.EQ(*params.Symbol),
-		qm.OrderBy(dao.StockPriceColumns.AcquisitionTime+" desc"),
+	price, err := dao.Prices(
+		dao.PriceWhere.StockID.EQ(*params.Symbol),
+		qm.OrderBy(dao.PriceColumns.AcquisitionTime+" desc"),
 	).All(ctx, db)
 	if err != nil {
 		return err

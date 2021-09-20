@@ -16,6 +16,11 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
+type postStockResponce struct {
+	Symbol string                `json:"symbol"`
+	Price  []alphavantage.Ticker `json:"price"`
+}
+
 // HandlePostStockRequest　株式データ登録
 // (POST /stock)
 func HandlePostStockRequest(w http.ResponseWriter, r *http.Request, db *sql.DB) error {
@@ -31,24 +36,40 @@ func HandlePostStockRequest(w http.ResponseWriter, r *http.Request, db *sql.DB) 
 		return err
 	}
 
-	tickerSlice, err := alphavantage.New(os.Getenv("API_KEY")).GetTicker("TIME_SERIES_INTRADAY", request.Symbol, "5min")
+	api := alphavantage.New(os.Getenv("API_KEY"))
+	tickerSlice, err := api.GetTicker("TIME_SERIES_INTRADAY", request.Symbol, request.Interval)
 	if err != nil {
 		return err
 	}
 
-	StockPriceSlice := make([]dao.StockPrice, 0, len(tickerSlice))
-	for _, t := range tickerSlice {
-		var s dao.StockPrice
-		s.ID = uuid.NewV4().String()
-		s.SymbolID = request.Symbol
-		s.Close = t.Close
-		s.High = t.High
-		s.Low = t.Low
-		s.Open = t.Open
-		s.Volume = t.Volume
-		s.AcquisitionTime = t.Time
+	stock, err := dao.Stocks(
+		dao.StockWhere.Symbol.EQ(request.Symbol),
+	).One(ctx, db)
+	if err != nil {
+		return err
+	}
 
-		StockPriceSlice = append(StockPriceSlice, s)
+	interval, err := dao.Intervals(
+		dao.IntervalWhere.Time.EQ(request.Interval),
+	).One(ctx, db)
+	if err != nil {
+		return err
+	}
+
+	price := make([]dao.Price, 0, len(tickerSlice))
+	for _, t := range tickerSlice {
+		var p dao.Price
+		p.ID = uuid.NewV4().String()
+		p.StockID = stock.ID
+		p.IntervalID = interval.ID
+		p.Close = t.Close
+		p.High = t.High
+		p.Low = t.Low
+		p.Open = t.Open
+		p.Volume = t.Volume
+		p.AcquisitionTime = t.Time
+
+		price = append(price, p)
 	}
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -56,8 +77,8 @@ func HandlePostStockRequest(w http.ResponseWriter, r *http.Request, db *sql.DB) 
 		return err
 	}
 
-	for i := range StockPriceSlice {
-		if err := StockPriceSlice[i].Insert(ctx, tx, boil.Infer()); err != nil {
+	for i := range price {
+		if err := price[i].Insert(ctx, tx, boil.Infer()); err != nil {
 			if strings.Contains(err.Error(), "Error 1062") {
 				continue
 			}
@@ -75,11 +96,12 @@ func HandlePostStockRequest(w http.ResponseWriter, r *http.Request, db *sql.DB) 
 		return tickerSlice[i].Time.Before(tickerSlice[j].Time)
 	})
 
-	return render.JSONResponse(w, http.StatusAccepted, tickerSlice)
+	return render.JSONResponse(w, http.StatusAccepted, postStockResponce{Symbol: stock.Symbol, Price: tickerSlice})
 }
 
 func (p AP01PostStockJSONBody) validate() error {
 	return validation.ValidateStruct(&p,
 		validation.Field(&p.Symbol, validation.Required),
+		validation.Field(&p.Interval, validation.Required),
 	)
 }

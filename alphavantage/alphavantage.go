@@ -3,6 +3,8 @@ package alphavantage
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"go_stock_analysis/message"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -68,20 +70,43 @@ func (api *APIClient) doRequest(method, urlPath string, query map[string]string,
 	return body, nil
 }
 
-func (api *APIClient) GetQuery(series string, symbol string, interval string) map[string]string {
+func checkInterval(interval string) bool {
+
+	check := []string{"1min", "5min", "15min", "30min", "60min"}
+
+	for i := range check {
+		if check[i] == interval {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (api *APIClient) GetQuery(series string, symbol string, interval string) (map[string]string, error) {
 
 	query := make(map[string]string)
+
+	if interval != "" {
+		if ok := checkInterval(interval); !ok {
+			return nil, fmt.Errorf(message.ErrorInterval)
+		}
+		query["interval"] = interval
+	}
+
 	query["function"] = series
 	query["symbol"] = symbol
-	query["interval"] = interval
 	query["apikey"] = api.GetKey()
 
-	return query
+	return query, nil
 }
 
 func (api *APIClient) GetTicker(series string, symbol string, interval string) ([]Ticker, error) {
 
-	query := api.GetQuery(series, symbol, interval)
+	query, err := api.GetQuery(series, symbol, interval)
+	if err != nil {
+		return nil, err
+	}
 
 	bytesBody, err := api.doRequest("GET", "", query, nil)
 	if err != nil {
