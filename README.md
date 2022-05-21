@@ -11,5 +11,5 @@
     - `$ docker-compose exec db bash`
     - `/$ mysql -uroot -ppassword go_stock_analysis < init.sql`
 3. サーバー立ち上げ
-  - `manable-server$ make dev`
+  - `/app$ make dev`
 4. サーバが立ち上がる:tada:
