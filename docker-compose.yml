@@ -6,10 +6,15 @@ services:
     ports:
       - "3306:3306"
     environment:
+      - "MYSQL_DATABASE=go_stock_analysis"
+      - "MYSQL_USER=user"
+      - "MYSQL_PASSWORD=passw0rd"
       - "MYSQL_ROOT_PASSWORD=password"
     volumes:
       - "./mysql/conf:/etc/mysql/conf.d"
       - "./mysql/init:/docker-entrypoint-initdb.d"
+    healthcheck:
+        test: mysqladmin ping -h 127.0.0.1 -uroot
   dev:
     build:
       context: "./"
@@ -17,7 +22,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - "./:/app"
+      - "./:/go/src/app"
     tty: true
     environment:
       - "DB_USER=root"
@@ -25,3 +30,6 @@ services:
       - "DB_HOST=db"
       - "DB_NAME=go_stock_analysis"
       - "API_KEY=demo"
+    depends_on:
+      db:
+        condition: service_healthy
