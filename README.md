@@ -1,5 +1,39 @@
 # go_stock_analysis
 
+## ディレクトリ構成
+
+```text
+.
+├── alphavantage/        // コード
+├── apitemplates/        // APIコード自動生成用のテンプレート
+├── dao/                 // sql-boilerで生成したコード
+├── db/schema.sql        // DBスキーマSQL
+├── message/             // コード
+├── mysql/               // 開発環境用Docker
+├── registry/            // コード
+├── render/              // コード
+├── server/          　　　　　　　　// コード
+├── Dockerfile           // 開発環境用Docker
+├── README.md
+├── api.yaml             // API定義書
+├── docker-compose.yml   // 開発環境用Docker
+├── domain/              // コード ビジネスロジック
+├── go.mod               // 依存管理ファイル
+├── go.sum               // 依存管理ファイル(lock)
+├── makefile             // make
+├── sqlboiler.toml       // sql-boiler用
+└── start.sh       　　　　　　　　　　　　// コンテナ自動立ち上げ
+```
+
+## ライブラリ
+
+| ライブラリ名 | Note | コマンド |
+| ------------ | ---- | -------- |
+| [chi](https://github.com/go-chi/chi)                          | Router         | - |
+| [SQLBoiler](https://github.com/volatiletech/sqlboiler)        | ORM作成ツール  | sqlboiler |
+| [sqldef](https://github.com/k0kubun/sqldef)                   | DBスキーマ同期 | mysqldef |
+
+
 ## ローカル開発環境セットアップ方法
 
 1. 株取得用にAPIキーを取得する(https://www.alphavantage.co/support/#api-key)
