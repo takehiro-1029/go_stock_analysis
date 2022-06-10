@@ -52,3 +52,6 @@
 5. サーバが立ち上がる:tada:
 
 ※上記1〜3は`$ sh start.sh`でも実行できます
+
+## インフラコード管理
+[terraform_ecs](https://github.com/takehiro-1029/terraform_ecs)
