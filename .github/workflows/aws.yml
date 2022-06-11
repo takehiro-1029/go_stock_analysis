@@ -53,9 +53,8 @@ jobs:
       - name: Translate secrets of base64 into json
         env:
           JSON_DECODE: ${{ secrets.TASK_DEFINITION }}
-
         run: |
-          echo-n $JSON_DECODE | base64 --decode > ./task-definition.json
+          echo -n $JSON_DECODE | base64 --decode > ./task-definition.json
 
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
