@@ -9,9 +9,9 @@ on:
 
 env:
   AWS_REGION: ap-northeast-1                          # set this to your preferred AWS region, e.g. us-west-1
-  ECR_REPOSITORY: MY_ECR_REPOSITORY                   # set this to your Amazon ECR repository name
-  ECS_SERVICE: MY_ECS_SERVICE                         # set this to your Amazon ECS service name
-  ECS_CLUSTER: MY_ECS_CLUSTER                         # set this to your Amazon ECS cluster name
+  ECR_REPOSITORY: my_ecr_repo                         # set this to your Amazon ECR repository name
+  ECS_SERVICE: my_ecs_service                         # set this to your Amazon ECS service name
+  ECS_CLUSTER: my_ecs_cluster                         # set this to your Amazon ECS cluster name
   ECS_TASK_DEFINITION: ${{ secrets.TASK_DEFINITION }} # set this to the path to your Amazon ECS task definition
   CONTAINER_NAME: go-container                        # set this to the name of the container in the
                                                       # containerDefinitions section of your task definition
