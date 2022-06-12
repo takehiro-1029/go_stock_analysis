@@ -8,4 +8,5 @@
 
 # 概要
 1. Actions secretsにAWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEYを登録
-2. task-definition.jsonをエンコードしたものをTASK_DEFINITIONに登録
+2. タスク定義書（task-definition.json）を作成
+3. task-definition.jsonをbase64エンコードしたものをTASK_DEFINITIONに登録
