@@ -1,5 +1,5 @@
 pkgname = "dao"
-output = "dao"
+output = "infra/dao"
 wipe = true
 no-tests = true
 

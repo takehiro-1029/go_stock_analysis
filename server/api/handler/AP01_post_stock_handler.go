@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"go_stock_analysis/alphavantage"
-	"go_stock_analysis/dao"
+	"go_stock_analysis/infra/dao"
 	"go_stock_analysis/render"
 	"net/http"
 	"os"

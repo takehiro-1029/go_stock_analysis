@@ -12,8 +12,8 @@ setup-tools:
 	go install github.com/go-delve/delve/cmd/dlv@latest
 	go install golang.org/x/tools/cmd/stringer@latest
 	go install github.com/moznion/gonstructor/cmd/gonstructor@latest
-	go install github.com/volatiletech/sqlboiler/v4@v4.4.0
-	GO111MODULE=off go get github.com/volatiletech/sqlboiler/drivers/sqlboiler-mysql
+	go install github.com/volatiletech/sqlboiler/v4@v4.6.0
+	go install github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-mysql@v4.6.0
 	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.5.0
 	go install github.com/k0kubun/sqldef/cmd/mysqldef@v0.8.8
 
