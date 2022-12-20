@@ -1,28 +1,29 @@
 # go_stock_analysis
 
+## 開発手法
+[ドメイン駆動設計](https://codezine.jp/article/detail/11968)
+
 ## ディレクトリ構成
 
 ```text
 .
-├── alphavantage/        // コード
 ├── apitemplates/        // APIコード自動生成用のテンプレート
-├── dao/                 // sql-boilerで生成したコード
 ├── db/schema.sql        // DBスキーマSQL
-├── message/             // コード
+├── message/             // メッセージ文面
 ├── mysql/               // 開発環境用Docker
-├── registry/            // コード
-├── render/              // コード
-├── server/          　　　　　　　　// コード
+├── domain/              // DDD domain層
+├── infra/               // DDD infra層
+├── usecase/             // DDD usecase層
+├── server/              // DDD application層
 ├── Dockerfile           // 開発環境用Docker
 ├── README.md
 ├── api.yaml             // API定義書
 ├── docker-compose.yml   // 開発環境用Docker
-├── domain/              // コード ビジネスロジック
 ├── go.mod               // 依存管理ファイル
 ├── go.sum               // 依存管理ファイル(lock)
 ├── makefile             // make
 ├── sqlboiler.toml       // sql-boiler用
-└── start.sh       　　　　　　　　　　　　// コンテナ自動立ち上げ
+└── start.sh             // コンテナ自動立ち上げ
 ```
 
 ## ライブラリ

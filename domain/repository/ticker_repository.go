@@ -7,6 +7,6 @@ import (
 
 type TickerRepository interface {
 	GetFromExternalAPI(series string, symbol string, interval string) ([]model.Ticker, error)
-	FindByStockID(ctx context.Context, id string) ([]model.Ticker, error)
+	FindBySymbol(ctx context.Context, symbol string) ([]model.Ticker, error)
 	SaveAll(ctx context.Context, stock, interval string, tickerSlice []model.Ticker) error
 }
