@@ -18,7 +18,7 @@ CREATE TABLE `intervals` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 CREATE TABLE `price` (
-  `id` char(36) COLLATE utf8mb4_bin NOT NULL,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `stock_id` varchar(36) COLLATE utf8mb4_bin NOT NULL,
   `interval_id` varchar(36) COLLATE utf8mb4_bin NOT NULL,
   `open` float(10,3) unsigned NOT NULL COMMENT '始値',

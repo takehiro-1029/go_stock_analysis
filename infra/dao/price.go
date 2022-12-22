@@ -23,7 +23,7 @@ import (
 
 // Price is an object representing the database table.
 type Price struct {
-	ID              string    `boil:"id" json:"id" toml:"id" yaml:"id"`
+	ID              uint64    `boil:"id" json:"id" toml:"id" yaml:"id"`
 	StockID         string    `boil:"stock_id" json:"stock_id" toml:"stock_id" yaml:"stock_id"`
 	IntervalID      string    `boil:"interval_id" json:"interval_id" toml:"interval_id" yaml:"interval_id"`
 	Open            float32   `boil:"open" json:"open" toml:"open" yaml:"open"`
@@ -93,6 +93,29 @@ var PriceTableColumns = struct {
 
 // Generated where
 
+type whereHelperuint64 struct{ field string }
+
+func (w whereHelperuint64) EQ(x uint64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperuint64) NEQ(x uint64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperuint64) LT(x uint64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperuint64) LTE(x uint64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperuint64) GT(x uint64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperuint64) GTE(x uint64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+func (w whereHelperuint64) IN(slice []uint64) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
+}
+func (w whereHelperuint64) NIN(slice []uint64) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
+}
+
 type whereHelperfloat32 struct{ field string }
 
 func (w whereHelperfloat32) EQ(x float32) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.EQ, x) }
@@ -146,7 +169,7 @@ func (w whereHelperuint) NIN(slice []uint) qm.QueryMod {
 }
 
 var PriceWhere = struct {
-	ID              whereHelperstring
+	ID              whereHelperuint64
 	StockID         whereHelperstring
 	IntervalID      whereHelperstring
 	Open            whereHelperfloat32
@@ -158,7 +181,7 @@ var PriceWhere = struct {
 	CreatedAt       whereHelpertime_Time
 	UpdatedAt       whereHelpertime_Time
 }{
-	ID:              whereHelperstring{field: "`price`.`id`"},
+	ID:              whereHelperuint64{field: "`price`.`id`"},
 	StockID:         whereHelperstring{field: "`price`.`stock_id`"},
 	IntervalID:      whereHelperstring{field: "`price`.`interval_id`"},
 	Open:            whereHelperfloat32{field: "`price`.`open`"},
@@ -196,8 +219,8 @@ type priceL struct{}
 
 var (
 	priceAllColumns            = []string{"id", "stock_id", "interval_id", "open", "high", "low", "close", "volume", "acquisition_time", "created_at", "updated_at"}
-	priceColumnsWithoutDefault = []string{"id", "stock_id", "interval_id", "open", "high", "low", "close", "volume", "acquisition_time"}
-	priceColumnsWithDefault    = []string{"created_at", "updated_at"}
+	priceColumnsWithoutDefault = []string{"stock_id", "interval_id", "open", "high", "low", "close", "volume", "acquisition_time"}
+	priceColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	pricePrimaryKeyColumns     = []string{"id"}
 )
 
@@ -814,7 +837,7 @@ func Prices(mods ...qm.QueryMod) priceQuery {
 
 // FindPrice retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindPrice(ctx context.Context, exec boil.ContextExecutor, iD string, selectCols ...string) (*Price, error) {
+func FindPrice(ctx context.Context, exec boil.ContextExecutor, iD uint64, selectCols ...string) (*Price, error) {
 	priceObj := &Price{}
 
 	sel := "*"
@@ -911,15 +934,26 @@ func (o *Price) Insert(ctx context.Context, exec boil.ContextExecutor, columns b
 		fmt.Fprintln(writer, cache.query)
 		fmt.Fprintln(writer, vals)
 	}
-	_, err = exec.ExecContext(ctx, cache.query, vals...)
+	result, err := exec.ExecContext(ctx, cache.query, vals...)
 
 	if err != nil {
 		return errors.Wrap(err, "dao: unable to insert into price")
 	}
 
+	var lastID int64
 	var identifierCols []interface{}
 
 	if len(cache.retMapping) == 0 {
+		goto CacheNoHooks
+	}
+
+	lastID, err = result.LastInsertId()
+	if err != nil {
+		return ErrSyncFail
+	}
+
+	o.ID = uint64(lastID)
+	if lastID != 0 && len(cache.retMapping) == 1 && cache.retMapping[0] == priceMapping["id"] {
 		goto CacheNoHooks
 	}
 
@@ -1187,16 +1221,27 @@ func (o *Price) Upsert(ctx context.Context, exec boil.ContextExecutor, updateCol
 		fmt.Fprintln(writer, cache.query)
 		fmt.Fprintln(writer, vals)
 	}
-	_, err = exec.ExecContext(ctx, cache.query, vals...)
+	result, err := exec.ExecContext(ctx, cache.query, vals...)
 
 	if err != nil {
 		return errors.Wrap(err, "dao: unable to upsert for price")
 	}
 
+	var lastID int64
 	var uniqueMap []uint64
 	var nzUniqueCols []interface{}
 
 	if len(cache.retMapping) == 0 {
+		goto CacheNoHooks
+	}
+
+	lastID, err = result.LastInsertId()
+	if err != nil {
+		return ErrSyncFail
+	}
+
+	o.ID = uint64(lastID)
+	if lastID != 0 && len(cache.retMapping) == 1 && cache.retMapping[0] == priceMapping["id"] {
 		goto CacheNoHooks
 	}
 
@@ -1374,7 +1419,7 @@ func (o *PriceSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) e
 }
 
 // PriceExists checks if the Price row exists.
-func PriceExists(ctx context.Context, exec boil.ContextExecutor, iD string) (bool, error) {
+func PriceExists(ctx context.Context, exec boil.ContextExecutor, iD uint64) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from `price` where `id`=? limit 1)"
 
