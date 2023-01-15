@@ -30,9 +30,7 @@ func run() error {
 	r := registry.NewRegistry(db)
 	s := server.NewServer(r, true)
 
-	http.ListenAndServe(":8080", s)
-
-	return fmt.Errorf("dd")
+	return http.ListenAndServe(":8000", s)
 }
 
 func main() {
