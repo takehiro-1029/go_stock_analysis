@@ -1,46 +1,30 @@
 package handler
 
 import (
-	"database/sql"
-	"go_stock_analysis/alphavantage"
-	"go_stock_analysis/infra/dao"
+	"fmt"
+	"go_stock_analysis/domain/model"
 	"go_stock_analysis/render"
+	"go_stock_analysis/usecase"
 	"net/http"
-
-	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
 type getStockResponce struct {
-	Symbol string                `json:"symbol"`
-	Price  []alphavantage.Ticker `json:"price"`
+	Symbol string         `json:"symbol"`
+	Price  []model.Ticker `json:"price"`
 }
 
 // HandleGetStockRequest　株式データ取得
 // (GET /stock)
-func HandleGetStockRequest(w http.ResponseWriter, r *http.Request, params AP01GetStockParams, db *sql.DB) error {
+func HandleGetStockRequest(w http.ResponseWriter, r *http.Request, params AP01GetStockParams, u *usecase.StockUsecase) error {
 
-	ctx := r.Context()
+	if params.Symbol == nil || *params.Symbol == "" {
+		return fmt.Errorf("")
+	}
 
-	price, err := dao.Prices(
-		dao.PriceWhere.StockID.EQ(*params.Symbol),
-		qm.OrderBy(dao.PriceColumns.AcquisitionTime+" desc"),
-	).All(ctx, db)
+	price, err := u.GetPrice(r.Context(), *params.Symbol)
 	if err != nil {
 		return err
 	}
 
-	tickerSlice := make([]alphavantage.Ticker, 0, len(price))
-	for _, p := range price {
-		var t alphavantage.Ticker
-		t.Close = p.Close
-		t.High = p.High
-		t.Low = p.Low
-		t.Open = p.Open
-		t.Volume = p.Volume
-		t.Time = p.AcquisitionTime
-
-		tickerSlice = append(tickerSlice, t)
-	}
-
-	return render.JSONResponse(w, http.StatusAccepted, getStockResponce{Symbol: *params.Symbol, Price: tickerSlice})
+	return render.JSONResponse(w, http.StatusAccepted, getStockResponce{Symbol: *params.Symbol, Price: price})
 }
