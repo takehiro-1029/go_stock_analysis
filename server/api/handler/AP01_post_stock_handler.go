@@ -1,31 +1,23 @@
 package handler
 
 import (
-	"database/sql"
 	"encoding/json"
-	"go_stock_analysis/alphavantage"
-	"go_stock_analysis/infra/dao"
+	"go_stock_analysis/domain/model"
 	"go_stock_analysis/render"
+	"go_stock_analysis/usecase"
 	"net/http"
-	"os"
-	"sort"
-	"strings"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	uuid "github.com/satori/go.uuid"
-	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
 type postStockResponce struct {
-	Symbol string                `json:"symbol"`
-	Price  []alphavantage.Ticker `json:"price"`
+	Symbol string         `json:"symbol"`
+	Price  []model.Ticker `json:"price"`
 }
 
 // HandlePostStockRequest　株式データ登録
 // (POST /stock)
-func HandlePostStockRequest(w http.ResponseWriter, r *http.Request, db *sql.DB) error {
-
-	ctx := r.Context()
+func HandlePostStockRequest(w http.ResponseWriter, r *http.Request, u *usecase.StockUsecase) error {
 
 	var request AP01PostStockJSONBody
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -36,67 +28,12 @@ func HandlePostStockRequest(w http.ResponseWriter, r *http.Request, db *sql.DB) 
 		return err
 	}
 
-	api := alphavantage.New(os.Getenv("API_KEY"))
-	tickerSlice, err := api.GetTicker("TIME_SERIES_INTRADAY", request.Symbol, request.Interval)
+	price, err := u.ResistPriceFromExternalAPI(r.Context(), request.Symbol, request.Interval)
 	if err != nil {
 		return err
 	}
 
-	stock, err := dao.Stocks(
-		dao.StockWhere.Symbol.EQ(request.Symbol),
-	).One(ctx, db)
-	if err != nil {
-		return err
-	}
-
-	interval, err := dao.Intervals(
-		dao.IntervalWhere.Time.EQ(request.Interval),
-	).One(ctx, db)
-	if err != nil {
-		return err
-	}
-
-	price := make([]dao.Price, 0, len(tickerSlice))
-	for _, t := range tickerSlice {
-		var p dao.Price
-		p.ID = uuid.NewV4().String()
-		p.StockID = stock.ID
-		p.IntervalID = interval.ID
-		p.Close = t.Close
-		p.High = t.High
-		p.Low = t.Low
-		p.Open = t.Open
-		p.Volume = t.Volume
-		p.AcquisitionTime = t.Time
-
-		price = append(price, p)
-	}
-
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-
-	for i := range price {
-		if err := price[i].Insert(ctx, tx, boil.Infer()); err != nil {
-			if strings.Contains(err.Error(), "Error 1062") {
-				continue
-			}
-			// nolint:errcheck // ignore error
-			tx.Rollback()
-			return err
-		}
-	}
-
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-
-	sort.Slice(tickerSlice, func(i, j int) bool {
-		return tickerSlice[i].Time.Before(tickerSlice[j].Time)
-	})
-
-	return render.JSONResponse(w, http.StatusAccepted, postStockResponce{Symbol: stock.Symbol, Price: tickerSlice})
+	return render.JSONResponse(w, http.StatusAccepted, postStockResponce{Symbol: request.Symbol, Price: price})
 }
 
 func (p AP01PostStockJSONBody) validate() error {
